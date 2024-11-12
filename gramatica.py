@@ -47,32 +47,77 @@ precedence = (
     ('right', 'UMENOS'),
 )
 
-# Gramática
+# Clases para representar los nodos del árbol
+class Node:
+    def __repr__(self):
+        return str(self)
+
+class BinaryOpNode(Node):
+    def __init__(self, left, operator, right):
+        self.left = left
+        self.operator = operator
+        self.right = right
+    
+    def __str__(self):
+        return f"({self.left} {self.operator} {self.right})"
+
+class UnaryOpNode(Node):
+    def __init__(self, operator, operand):
+        self.operator = operator
+        self.operand = operand
+    
+    def __str__(self):
+        return f"({self.operator}{self.operand})"
+
+class NumberNode(Node):
+    def __init__(self, value):
+        self.value = value
+    
+    def __str__(self):
+        return str(self.value)
+
+    def evaluate(self):
+        return self.value
+
+# Función para evaluar el árbol
+def evaluate(node):
+    if isinstance(node, NumberNode):
+        return node.value
+    elif isinstance(node, UnaryOpNode):
+        return -evaluate(node.operand)
+    elif isinstance(node, BinaryOpNode):
+        left_val = evaluate(node.left)
+        right_val = evaluate(node.right)
+        if node.operator == '+':
+            return left_val + right_val
+        elif node.operator == '-':
+            return left_val - right_val
+        elif node.operator == '*':
+            return left_val * right_val
+        elif node.operator == '/':
+            return left_val / right_val
+
+# Gramática y construcción del árbol
 def p_instrucciones_lista(t):
     '''instrucciones    : instruccion instrucciones
                         | instruccion'''
 
 def p_instrucciones_evaluar(t):
     'instruccion : REVALUAR CORIZQ expresion CORDER PTCOMA'
-    print('El valor de la expresión es:', t[3])
+    print('Expresión:', t[3])
+    print('Árbol de análisis sintáctico:', t[3])
+    print('Resultado de la evaluación:', evaluate(t[3]))
 
 def p_expresion_binaria(t):
     '''expresion : expresion MAS expresion
                  | expresion MENOS expresion
                  | expresion POR expresion
                  | expresion DIVIDIDO expresion'''
-    if t[2] == '+':
-        t[0] = t[1] + t[3]
-    elif t[2] == '-':
-        t[0] = t[1] - t[3]
-    elif t[2] == '*':
-        t[0] = t[1] * t[3]
-    elif t[2] == '/':
-        t[0] = t[1] / t[3]
+    t[0] = BinaryOpNode(t[1], t[2], t[3])
 
 def p_expresion_unaria(t):
     'expresion : MENOS expresion %prec UMENOS'
-    t[0] = -t[2]
+    t[0] = UnaryOpNode('-', t[2])
 
 def p_expresion_agrupacion(t):
     'expresion : PARIZQ expresion PARDER'
@@ -81,7 +126,7 @@ def p_expresion_agrupacion(t):
 def p_expresion_number(t):
     '''expresion : ENTERO
                  | DECIMAL'''
-    t[0] = float(t[1]) if '.' in str(t[1]) else int(t[1])
+    t[0] = NumberNode(float(t[1]) if '.' in t[1] else int(t[1]))
 
 # Error sintáctico
 def p_error(t):
@@ -95,4 +140,3 @@ with open("entrada.txt", "r") as f:
     input = f.read()
     print("Contenido del archivo:", input)
     parser.parse(input)
-
