@@ -3,3 +3,4 @@ Evaluar [1+1*2];
 Evaluar [-(1+1*6/3-5+7)];
 Evaluar [-(1+1*6/3-5+1*-2)];
 Evaluar [-(1.6+1.45)];
+Evaluar[(a + 2) * b];
